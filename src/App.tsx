@@ -56,8 +56,8 @@ function Home() {
     if (!loading) {
       if (boards.length > 0) { 
         if (boardId) {
-          const boardExists = boards.some(b => b.id === boardId); 
-          if (boardExists) {
+          const filteredBoards = boards.filter(board => board.user_id === session?.user?.id);
+          if (filteredBoards) {
             setActiveBoardById(boardId);
           } else {
             if (boards[0]?.id) navigate(`/${boards[0].id}`, { replace: true });
@@ -79,7 +79,10 @@ function Home() {
   return (
     <div>
       {session && <PresenceManager />}
-      {session ? ( boards.length > 0 ? <Board /> : <EmptyBoard type="ADD" /> ) : <Login />}
+      {session ? ( 
+        boards.length === 0 ? <EmptyBoard type="ADD" /> : <Board />
+      ) : <Login />
+      }
 
     </div>
   )
