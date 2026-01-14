@@ -11,7 +11,6 @@ export default function BoardCard() {
     const others = usePresenceStore((state) => state.others);
     const me = usePresenceStore((state) => state.me);
     const navigate = useNavigate();
-    const { session, username } = useAppContext()
 
     useEffect(() => {
         // Fetch all boards if not already fetched

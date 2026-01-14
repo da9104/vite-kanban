@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [react(), tailwindcss(), tsconfigPaths()],
   resolve: {
     alias: {
@@ -27,5 +27,8 @@ export default defineConfig({
   },
    define: {
     global: 'globalThis', 
+  },
+  ssr: {
+    noExternal: ['./src/**'], 
   },
 })

@@ -1,24 +1,17 @@
+import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
-import { StaticRouter } from "react-router";
+import { StaticRouter } from 'react-router-dom'
 import App from './App'
+import './styles/index.css'
+import './styles/Typo.css'
 
-export async function render(url: string) {
-  try {
-    const appHtml = renderToString(
-      <StaticRouter location={url} >
-        <App  />
+export function render(url: string) {
+  const html = renderToString(
+    <StrictMode>
+      <StaticRouter location={url}>
+        <App />
       </StaticRouter>
-    )
-
-    return {
-      html: appHtml,
-      head: '',
-    }
-  } catch (error) {
-    console.error('SSR render failed:', error)
-    return {
-      html: '<div>Error loading content</div>',
-      head: '',
-    }
-  }
+    </StrictMode>
+  )
+  return { html }
 }
