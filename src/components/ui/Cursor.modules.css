@@ -1,0 +1,34 @@
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Allows clicking "through" the cursors to the board */
+  overflow: hidden;
+  z-index: 9999; /* Always on top */
+}
+
+.cursorWrapper {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  will-change: left, top; /* Performance optimization for animations */
+}
+
+.cursorIcon {
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+}
+
+.nameTag {
+  margin-left: 12px;
+  margin-top: -4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

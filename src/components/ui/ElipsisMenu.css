@@ -1,0 +1,29 @@
+.elipsis-menu {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  left: 10%;
+  right: 0;
+  top: 40px;
+  padding: 16px;
+  width: 192px;
+  background-color: white;
+  color: #828fa3;
+  box-shadow: 0px 10px 20px rgba(54, 78, 126, 0.25);
+  border-radius: 8px;
+  z-index: 1000;
+}
+
+.dark .elipsis-menu {
+  background: #20212c;
+}
+
+.elipsis-menu p {
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.elipsis-menu-red {
+  color: #ea5555;
+}
