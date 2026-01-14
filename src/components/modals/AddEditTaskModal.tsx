@@ -1,5 +1,5 @@
 import { useState } from "react"
-import useBoardStore, { type Task, type Column } from '@/store/useBoardStore';
+import useBoardStore from '@/store/useBoardStore';
 import { v4 as uuidv4 } from 'uuid'
 import { X } from 'lucide-react'
 
@@ -12,21 +12,18 @@ interface AddEditTaskModalProps {
 }
 
 export default function AddEditTaskModal({ type, setIsTaskModalOpen, setIsAddTaskModalOpen, taskIndex, prevColIndex = 0 }: AddEditTaskModalProps) {
+    const addTask = useBoardStore((state) => state.addTask)
+    const editTask = useBoardStore((state) => state.editTask)
+    const board = useBoardStore((state) => state.boards).find((board) => board.isActive)
+
+    const columns = board ? board.columns : []
+    const col = columns.find((_, index) => index === prevColIndex)
+    const task = col ? col.tasks.find((_, index) => index === taskIndex) : undefined
+
     const [isFirstLoad, setIsFirstLoad] = useState(true)
     const [isValid, setIsValid] = useState(true)
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
-    const addTask = useBoardStore((state) => state.addTask)
-    const editTask = useBoardStore((state) => state.editTask)
-    const board = useBoardStore((state) => state.boards).find((board) => board.isActive)
-    
-    if (!board) {
-        return null; // Handle case where no active board is found
-    }
-
-    const columns = board.columns
-    const col = columns.find((col, index) => index === prevColIndex)
-    const task = col ? col.tasks.find((task, index) => index === taskIndex) : undefined
     const [newColIndex, setNewColIndex] = useState(prevColIndex)
     const [status, setStatus] = useState(
         type === 'EDIT' && task ? task.status : (columns.length > 0 ? columns[0].name : '')
@@ -35,6 +32,10 @@ export default function AddEditTaskModal({ type, setIsTaskModalOpen, setIsAddTas
         { title: '', isCompleted: false, id: uuidv4() },
         { title: '', isCompleted: false, id: uuidv4() }
     ])
+
+    if (!board) {
+        return null; // Handle case where no active board is found
+    }
 
     if (type === "EDIT" && isFirstLoad) {
         if (task) {
@@ -64,7 +65,7 @@ export default function AddEditTaskModal({ type, setIsTaskModalOpen, setIsAddTas
         return true
     }
 
-    const onChangeSubtasks = (id, newValue) => {
+    const onChangeSubtasks = (id: string, newValue: string) => {
         setSubtasks((prevState) => {
             const newState = [...prevState]
             const subtask = newState.find((subtask) => subtask.id === id)
@@ -95,15 +96,17 @@ export default function AddEditTaskModal({ type, setIsTaskModalOpen, setIsAddTas
                 newColIndex
             })
         } else {
-            editTask({
-                title,
-                description,
-                subtasks,
-                status,
-                taskIndex,
-                prevColIndex,
-                newColIndex
-            })
+            if (taskIndex !== undefined) {
+                editTask({
+                    title,
+                    description,
+                    subtasks,
+                    status,
+                    taskIndex,
+                    prevColIndex,
+                    newColIndex
+                })
+            }
         }
     }
 
@@ -209,7 +212,7 @@ export default function AddEditTaskModal({ type, setIsTaskModalOpen, setIsAddTas
                     if (isValid) {
                         onSubmit(type)
                         setIsAddTaskModalOpen(false)
-                        type === 'edit' && setIsTaskModalOpen && setIsTaskModalOpen(false)
+                        type === 'EDIT' && setIsTaskModalOpen && setIsTaskModalOpen(false)
                     }
                 }}
                     className="create-btn"

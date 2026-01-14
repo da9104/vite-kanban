@@ -1,4 +1,4 @@
-import { useState, type SetStateAction } from "react"
+import { useState } from "react"
 import useBoardStore, { type Column } from '@/store/useBoardStore';
 import { v4 as uuidv4 } from 'uuid'
 import '@/components/Board.css'
@@ -12,7 +12,7 @@ interface AddEditBoardModalProps {
 export default function AddEditBoardModal({ type, setIsBoardModalOpen }: AddEditBoardModalProps) {
     const [isFirstLoad, setIsFirstLoad] = useState(true)
     const [name, setName] = useState("")
-    const [newColumns, setNewColumns] = useState<(Column & { id: string | number })[]>([
+    const [newColumns, setNewColumns] = useState<(Column & { id: string })[]>([
         { name: 'Todo', tasks: [], id: uuidv4() },
         { name: 'Doing', tasks: [], id: uuidv4() },
     ])
@@ -118,7 +118,7 @@ export default function AddEditBoardModal({ type, setIsBoardModalOpen }: AddEdit
                                         type="text"
                                         value={column.name}
                                         className={
-                                            !isValid && !column.name.trim() ? "red-board" : ""
+                                            !isValid && !column.name.trim() ? "red-border" : ""
                                         }
                                         disabled={isSubmitting}
                                     />

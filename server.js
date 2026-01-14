@@ -72,7 +72,7 @@ const base = process.env.BASE || '/'
 
 // Cached production assets
 const templateHtml = isProduction
-  ? await fs.readFile('./dist/client/index.html', 'utf-8')
+  ? await fs.readFile(join(__dirname, 'dist/client/index.html'), 'utf-8')
   : ''
 
 // Add Vite or respective production middlewares
@@ -90,7 +90,7 @@ if (!isProduction) {
   const compression = (await import('compression')).default
   const sirv = (await import('sirv')).default
   app.use(compression())
-  app.use(base, sirv('./dist/client', { extensions: [], index: false }))
+  app.use(base, sirv(join(__dirname, 'dist/client'), { extensions: [], index: false }))
 }
 
 app.use('/api/auth', authRoutes)    
@@ -133,8 +133,10 @@ app.use('*all', async (req, res) => {
 })
 
 // Start the server
-server.listen(port, () => {
-  console.log(`Server started at http://localhost:${port}`)
-})
+if (!process.env.VERCEL) {
+  server.listen(port, () => {
+    console.log(`Server started at http://localhost:${port}`)
+  })
+}
 
 export default app

@@ -10,7 +10,7 @@ router.get('/google', async (req, res) => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: 'https://vite-kanban.vercel.app/api/auth/callback',
+      redirectTo: `${process.env.VITE_SERVER_URL || 'http://localhost:4000'}/api/auth/callback`,
     },
   });
 

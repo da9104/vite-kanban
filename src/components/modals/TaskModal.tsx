@@ -1,4 +1,4 @@
-import { useState, type SetStateAction } from 'react'
+import { useState } from 'react'
 import useBoardStore from '@/store/useBoardStore';
 import '@/components/Task.modules.css'
 import Subtask from '@/components/Subtask';
@@ -22,16 +22,15 @@ export default function TaskModal({ taskIndex, colIndex, setIsTaskModalOpen }: T
     const boards = useBoardStore((state) => state.boards);
     const board = boards.find((board) => board.isActive === true);
 
-    if (!board) return null;
-    const columns = board.columns
-    const col = columns.find((col, i) => i === colIndex)
-    if (!col) return null;
+    const columns = board ? board.columns : []
+    const col = columns.find((_, i) => i === colIndex)
+    const task = col ? col.tasks.find((_, i) => i === taskIndex) : undefined
 
-    const task = col.tasks.find((task, i) => i === taskIndex)
-    if (!task) return null;
+    const [status, setStatus] = useState(task ? task.status : '')
+    const [newColIndex, setNewColIndex] = useState(col ? columns.indexOf(col) : 0)
 
-    const [status, setStatus] = useState(task.status)
-    const [newColIndex, setNewColIndex] = useState(columns.indexOf(col))
+    if (!board || !col || !task) return null;
+
     const subtasks = task.subtasks
 
     let completed = 0
