@@ -17,10 +17,10 @@ function Layout() {
   const { session } = useAppContext();
   if (!session) return <Navigate to="/login" replace />;
   return (
-      <div className={`app ${theme}`}>
-        <Header />
-        <Outlet />
-      </div>
+    <div className={`app ${theme}`}>
+      <Header />
+      <Outlet />
+    </div>
   )
 }
 
@@ -31,11 +31,12 @@ function App() {
       <Routes>
         {/* Public login route - no layout */}
         <Route path="/login" element={<Login />} />
-        
+
+        <Route path="/share/:boardId" element={<PublicBoardView />} />
+
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path=":boardId" element={<Home />} />
-          <Route path="login" element={<Login />} />
         </Route>
       </Routes>
     </AuthProvider>
@@ -56,24 +57,27 @@ function Home() {
   useEffect(() => {
     if (!loading && boards.length > 0) {
       const userId = session?.user?.id;
-      const filteredBoards = userId 
-        ? boards.filter(board => board.user_id === userId) 
-        : boards;  // Guests see all (or implement public filter)
+      const ownBoards = userId ? boards.filter(b => b.user_id === userId) : [];
 
-      if (filteredBoards.length > 0) {
-        if (boardId) {
-          const boardExists = filteredBoards.some(b => b.id === boardId);
-          if (boardExists) {
-            setActiveBoardById(boardId);
-          } else if (filteredBoards[0]?.id) {
-            navigate(`/${filteredBoards[0].id}`, { replace: true });
-          }
-        } else {
-          const boardToRedirect = filteredBoards.find(b => b.isActive) || filteredBoards[0];
-          if (boardToRedirect?.id) {
-            navigate(`/${boardToRedirect.id}`, { replace: true });
-          }
+      let targetBoards = ownBoards;
+      let activeBoardId;
+
+      if (boardId) {
+        // Always allow specific boardId (own or foreign/public)
+        const targetBoard = boards.find(b => b.id === boardId);
+        if (targetBoard) {
+          setActiveBoardById(boardId);
+          return;  // No redirect
         }
+        // Invalid boardId -> own first
+        activeBoardId = ownBoards[0]?.id;
+      } else {
+        // No boardId -> redirect to own active/first
+        activeBoardId = ownBoards.find(b => b.isActive)?.id || ownBoards[0]?.id;
+      }
+
+      if (activeBoardId) {
+        navigate(`/${activeBoardId}`, { replace: true });
       }
     }
   }, [boardId, boards, loading, setActiveBoardById, navigate, session]);
@@ -92,6 +96,37 @@ function Home() {
       <Board />
     </div>
   );
+}
+
+function PublicBoardView() {
+  const { theme } = useThemeStore()
+  const { boardId } = useParams();
+  const navigate = useNavigate();
+  const { boards, loading, fetchBoards } = useBoardStore();
+  const setActiveBoardById = useBoardStore(s => s.setActiveBoardById);
+
+  useEffect(() => {
+    fetchBoards();
+  }, [fetchBoards]);
+
+  useEffect(() => {
+    if (!loading && boards.length > 0) {
+      const board = boards.find(b => b.id === boardId);
+      if (board) {
+        setActiveBoardById(boardId);
+      } else {
+        navigate('/login', { replace: true });  // Invalid -> login
+      }
+    }
+  }, [boardId, boards, loading]);
+
+  if (loading || !boards.find(b => b.id === boardId)) return <div>Loading...</div>;
+
+  return <div className={`app ${theme}`}>
+    <Header />
+    <PresenceManager />
+    <Board />
+  </div>;
 }
 
 export default App

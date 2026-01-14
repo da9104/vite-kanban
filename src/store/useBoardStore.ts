@@ -9,26 +9,34 @@ export interface Column { id?: string; name: string; tasks: Task[]; board_id?: s
 export interface Board { id?: string; name: string; isActive: boolean; columns: Column[]; user_id?: string; }
 
 interface BoardState {
-  boards: Board[];
-  loading: boolean;
-  fetchBoards: () => Promise<void>;
-  addBoard: (name: string, newColumns: Column[]) => Promise<void>; // Changed to async
-  editBoard: (name: string, newColumns: Column[]) => Promise<void>;
-  deleteBoard: () => Promise<void>;
-  setBoardActive: (index: number) => void;
-  setActiveBoardById: (boardId: string) => void;
-  addTask: (payload: { title: string; status: string; description: string; subtasks: Subtask[]; newColIndex: number }) => Promise<void>;
-  editTask: (payload: { title: string; status: string; description: string; subtasks: Subtask[]; prevColIndex: number; newColIndex: number; taskIndex: number }) => Promise<void>;
-  dragTask: (colIndex: number, prevColIndex: number, taskIndex: number) => Promise<void>;
-  setSubTaskCompleted: (colIndex: number, taskIndex: number, index: number) => Promise<void>;
-  setTaskStatus: (payload: { status: string; colIndex: number; newColIndex: number; taskIndex: number }) => Promise<void>;
-  deleteTask: (colIndex: number, taskIndex: number) => Promise<void>;
+    boards: Board[];
+    loading: boolean;
+    fetchBoards: () => Promise<void>;
+    fetchUserBoards: () => Promise<void>;
+    addBoard: (name: string, newColumns: Column[]) => Promise<void>; // Changed to async
+    editBoard: (name: string, newColumns: Column[]) => Promise<void>;
+    deleteBoard: () => Promise<void>;
+    setBoardActive: (index: number) => void;
+    setActiveBoardById: (boardId: string) => void;
+    addTask: (payload: { title: string; status: string; description: string; subtasks: Subtask[]; newColIndex: number }) => Promise<void>;
+    editTask: (payload: { title: string; status: string; description: string; subtasks: Subtask[]; prevColIndex: number; newColIndex: number; taskIndex: number }) => Promise<void>;
+    dragTask: (colIndex: number, prevColIndex: number, taskIndex: number) => Promise<void>;
+    setSubTaskCompleted: (colIndex: number, taskIndex: number, index: number) => Promise<void>;
+    setTaskStatus: (payload: { status: string; colIndex: number; newColIndex: number; taskIndex: number }) => Promise<void>;
+    deleteTask: (colIndex: number, taskIndex: number) => Promise<void>;
 }
 
 const useBoardStore = create<BoardState>()(
     immer((set, get) => ({
         boards: [], // Initialize with empty array
         loading: true,
+
+        fetchUserBoards: async (userId?: string) => {
+            const query = supabase.from('boards').select('*');
+            if (userId) query.eq('user_id', userId);
+            const { data } = await query;
+            set({ boards: data || [] });
+        },
 
         fetchBoards: async () => {
             set({ loading: true });
@@ -49,7 +57,7 @@ const useBoardStore = create<BoardState>()(
                 if (error) {
                     throw new Error(error.message);
                 }
-                
+
                 if (boards && boards.length > 0) {
                     // Map is_completed (DB) to isCompleted (Frontend)
                     const mappedBoards = boards.map((board, index) => ({
@@ -97,10 +105,10 @@ const useBoardStore = create<BoardState>()(
                     .select()
                     .single();
                 console.log("addBoard: Board insert result:", { boardData, boardError }); // DEBUG LOG
-        
+
                 if (boardError) throw boardError;
                 if (!boardData) throw new Error("Failed to create board (no data returned).");
-        
+
                 console.log("addBoard: Board created. Inserting columns..."); // DEBUG LOG
                 // 2. Create columns linked to the new board
                 // Populate user_id on inserts via client: { ..., user_id: supabase.auth.getUser().id }
@@ -110,22 +118,22 @@ const useBoardStore = create<BoardState>()(
                     user_id: user.id,
                     position: index
                 }));
-        
+
                 const { error: columnsError } = await supabase
                     .from('columns')
                     .insert(columnsToInsert);
                 console.log("addBoard: Columns insert result:", { columnsError }); // DEBUG LOG
-        
+
                 if (columnsError) throw columnsError;
-        
+
                 console.log("addBoard: Columns created. Fetching all boards..."); // DEBUG LOG
                 // 3. Refresh the state from the database to ensure consistency
                 await get().fetchBoards();
                 console.log("addBoard: Boards re-fetched successfully."); // DEBUG LOG
-        
+
             } catch (error) {
                 toast.error("Error in addBoard action:")
-                console.error("Error in addBoard action:", error); 
+                console.error("Error in addBoard action:", error);
             }
         },
 
@@ -155,11 +163,11 @@ const useBoardStore = create<BoardState>()(
                 // Delete removed columns
                 const columnsToDelete = existingColumnIds.filter(id => !newColumnIds.includes(id));
                 if (columnsToDelete.length > 0) {
-                     const { error: deleteError } = await supabase
+                    const { error: deleteError } = await supabase
                         .from('columns')
                         .delete()
                         .in('id', columnsToDelete);
-                     if (deleteError) throw deleteError;
+                    if (deleteError) throw deleteError;
                 }
 
                 // Process updates and inserts
@@ -193,7 +201,7 @@ const useBoardStore = create<BoardState>()(
                 console.error("Error editing board:", error);
             }
         },
-        
+
         deleteBoard: async () => {
             const board = get().boards.find((b) => b.isActive);
             if (!board?.id) return;
@@ -215,14 +223,14 @@ const useBoardStore = create<BoardState>()(
         },
 
         setBoardActive: (index) => set((state) => {
-                const boardIdToActivate = state.boards[index]?.name;
-                if (!boardIdToActivate) return;
-        
-                state.boards.forEach((board) => {
-                    board.isActive = board.name === boardIdToActivate;
-                });
-            }),
-            
+            const boardIdToActivate = state.boards[index]?.name;
+            if (!boardIdToActivate) return;
+
+            state.boards.forEach((board) => {
+                board.isActive = board.name === boardIdToActivate;
+            });
+        }),
+
         setActiveBoardById: (boardId) => set((state) => {
             state.boards.forEach((board) => {
                 board.isActive = board.id === boardId;
@@ -233,7 +241,7 @@ const useBoardStore = create<BoardState>()(
             try {
                 const board = get().boards.find((b) => b.isActive);
                 if (!board) throw new Error("No active board found");
-                
+
                 const column = board.columns[newColIndex];
                 if (!column || !column.id) throw new Error("Column not found or missing ID");
 
@@ -258,18 +266,18 @@ const useBoardStore = create<BoardState>()(
 
                 // Insert subtasks
                 if (subtasks.length > 0) {
-                     const subtasksToInsert = subtasks.map((s, index) => ({
-                         title: s.title,
-                         is_completed: s.isCompleted, // Changed to is_completed to match Supabase schema
-                         task_id: taskData.id,
-                         position: index // Add position for subtask
-                     }));
+                    const subtasksToInsert = subtasks.map((s, index) => ({
+                        title: s.title,
+                        is_completed: s.isCompleted, // Changed to is_completed to match Supabase schema
+                        task_id: taskData.id,
+                        position: index // Add position for subtask
+                    }));
 
-                     const { error: subtaskError } = await supabase
+                    const { error: subtaskError } = await supabase
                         .from('subtasks')
                         .insert(subtasksToInsert);
-                    
-                     if (subtaskError) throw subtaskError;
+
+                    if (subtaskError) throw subtaskError;
                 }
 
                 await get().fetchBoards();
@@ -281,67 +289,67 @@ const useBoardStore = create<BoardState>()(
         },
 
         editTask: async ({ title, status, description, subtasks, prevColIndex, newColIndex, taskIndex }) => {
-             const board = get().boards.find((b) => b.isActive);
-             if (!board) return;
- 
-             const prevColumn = board.columns[prevColIndex];
-             const task = prevColumn.tasks[taskIndex];
-             
-             // Task must have an ID to be updated
-             if (!(task as any).id) {
-                 console.error("Task missing ID, cannot update");
-                 return;
-             }
-             const taskId = (task as any).id;
-             const newColumn = board.columns[newColIndex];
- 
-             try {
-                 // 1. Update Task details
-                 const { error: taskError } = await supabase
-                     .from('tasks')
-                     .update({
-                         title,
-                         description,
-                         status: status.toLowerCase(),
-                         column_id: newColumn.id,
-                     })
-                     .eq('id', taskId);
- 
-                 if (taskError) throw taskError;
- 
-                 // 2. Handle Subtasks
-                 // First, delete existing subtasks (simplest approach for now, or you can diff them)
-                 const { error: deleteSubtasksError } = await supabase
-                     .from('subtasks')
-                     .delete()
-                     .eq('task_id', taskId);
-                 
-                 if (deleteSubtasksError) throw deleteSubtasksError;
- 
-                 // Insert new subtasks
-                 if (subtasks.length > 0) {
-                      const subtasksToInsert = subtasks.map((s, index) => ({
-                          title: s.title,
-                          is_completed: s.isCompleted,
-                          task_id: taskId,
-                          position: index
-                      }));
- 
-                      const { error: insertSubtasksError } = await supabase
-                         .from('subtasks')
-                         .insert(subtasksToInsert);
-                     
-                      if (insertSubtasksError) throw insertSubtasksError;
-                 }
- 
-                 // 3. Refresh State
-                 await get().fetchBoards();
- 
-             } catch (error) {
-                 toast.error("Error editing task:")
-                 console.error("Error editing task:", error);
-             }
-         },
+            const board = get().boards.find((b) => b.isActive);
+            if (!board) return;
+
+            const prevColumn = board.columns[prevColIndex];
+            const task = prevColumn.tasks[taskIndex];
+
+            // Task must have an ID to be updated
+            if (!(task as any).id) {
+                console.error("Task missing ID, cannot update");
+                return;
+            }
+            const taskId = (task as any).id;
+            const newColumn = board.columns[newColIndex];
+
+            try {
+                // 1. Update Task details
+                const { error: taskError } = await supabase
+                    .from('tasks')
+                    .update({
+                        title,
+                        description,
+                        status: status.toLowerCase(),
+                        column_id: newColumn.id,
+                    })
+                    .eq('id', taskId);
+
+                if (taskError) throw taskError;
+
+                // 2. Handle Subtasks
+                // First, delete existing subtasks (simplest approach for now, or you can diff them)
+                const { error: deleteSubtasksError } = await supabase
+                    .from('subtasks')
+                    .delete()
+                    .eq('task_id', taskId);
+
+                if (deleteSubtasksError) throw deleteSubtasksError;
+
+                // Insert new subtasks
+                if (subtasks.length > 0) {
+                    const subtasksToInsert = subtasks.map((s, index) => ({
+                        title: s.title,
+                        is_completed: s.isCompleted,
+                        task_id: taskId,
+                        position: index
+                    }));
+
+                    const { error: insertSubtasksError } = await supabase
+                        .from('subtasks')
+                        .insert(subtasksToInsert);
+
+                    if (insertSubtasksError) throw insertSubtasksError;
+                }
+
+                // 3. Refresh State
+                await get().fetchBoards();
+
+            } catch (error) {
+                toast.error("Error editing task:")
+                console.error("Error editing task:", error);
+            }
+        },
 
         dragTask: async (colIndex, prevColIndex, taskIndex) => {
             const board = get().boards.find((b) => b.isActive);
@@ -362,21 +370,21 @@ const useBoardStore = create<BoardState>()(
 
             // 2. Supabase Update
             if (task.id && nextColumn.id) {
-                 try {
-                     const newPosition = nextColumn.tasks.length; // Position is length of existing tasks (since we push to end)
+                try {
+                    const newPosition = nextColumn.tasks.length; // Position is length of existing tasks (since we push to end)
 
-                     const { error } = await supabase.from('tasks').update({
-                         column_id: nextColumn.id,
-                         position: newPosition
-                     }).eq('id', task.id);
-                     
-                     if (error) throw error;
+                    const { error } = await supabase.from('tasks').update({
+                        column_id: nextColumn.id,
+                        position: newPosition
+                    }).eq('id', task.id);
 
-                 } catch (err) {
-                     console.error("Failed to update dragged task:", err);
-                     // Optionally revert or refetch
-                     get().fetchBoards();
-                 }
+                    if (error) throw error;
+
+                } catch (err) {
+                    console.error("Failed to update dragged task:", err);
+                    // Optionally revert or refetch
+                    get().fetchBoards();
+                }
             }
         },
 
