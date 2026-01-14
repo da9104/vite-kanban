@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/server.js"
+      "destination": "/index.html"
     }
   ],
   "functions": {
-    "server.js": {
+    "api/auth.js": {
       "includeFiles": "dist/**"
     }
   }
