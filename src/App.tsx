@@ -5,7 +5,7 @@ import useThemeStore from '@/store/useThemeStore'
 import Header from '@/components/ui/Header'
 import EmptyBoard from '@/components/EmptyBoard'
 import Board from '@/components/Board';
-import Login from '@/components/Login'
+import Login from '@/components/LoginPage'
 import { AuthProvider, useAppContext } from '@/context/AuthProvider';
 import PresenceManager from '@/context/PresenceManager'
 import { useEffect } from 'react';

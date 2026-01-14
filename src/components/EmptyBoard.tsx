@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import AddEditBoardModal from '@/components/modals/AddEditBoardModal'
 import { useAppContext } from '@/context/AuthProvider'; // Import useAppContext
-import Login from '@/components/Login';
+import Login from '@/components/LoginPage';
 
 interface EmptyBoardProps {
     type: string;

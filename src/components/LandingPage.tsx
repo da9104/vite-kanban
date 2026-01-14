@@ -4,9 +4,8 @@ import { useEffect } from 'react';
 import { useNavigate, generatePath } from 'react-router-dom';
 import { motion } from "framer-motion"
 import { MousePointer2 } from 'lucide-react'
-import { useAppContext } from '@/context/AuthProvider';
 
-export default function BoardCard() {
+export default function LandingPage() {
     const boards = useBoardStore((state) => state.boards);
     const fetchBoards = useBoardStore((state) => state.fetchBoards);
     const setActiveBoardById = useBoardStore((state) => state.setActiveBoardById);
@@ -30,15 +29,14 @@ export default function BoardCard() {
     };
 
     const handleClick = (boardId: string) => {
-        const path = generatePath('/:boardId', { boardId });
+        const path = generatePath('/share/:boardId', { boardId });
         setActiveBoardById(boardId);
         navigate(path);
     };
 
 
     return (
-        <div className="flex items-center justify-center flex-col gap-4">
-
+        <div className="flex items-center justify-center flex-col gap-4 leading-9">
             <div className="text-center mb-12">
                 <div className="flex justify-center relative w-48 h-32 mx-auto mb-8">
                     {/* Green cursor - moves in a different path */}
@@ -81,11 +79,11 @@ export default function BoardCard() {
             </div>
 
             <h2 className="heading-L text-black dark:text-white mb-4 mt-4 px-4">Browse All Boards</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 leading-5">
                 {boards.map((board) => (
                     <div
                         key={board.id}
-                        className="p-4! bg-white dark:bg-[#2b2c37] rounded-lg shadow-md border border-transparent hover:border-[#635fc7] cursor-pointer transition-all no-underline"
+                        className="p-6! bg-white dark:bg-[#2b2c37] rounded-lg shadow-xs border hover:border-[#635fc7]! cursor-pointer transition-all no-underline"
                         onClick={() => {
                             if (board.id) {
                                 handleClick(board.id);
