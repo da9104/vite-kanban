@@ -2,6 +2,8 @@ import useBoardStore from '@/store/useBoardStore';
 import { usePresenceStore } from '@/store/usePresenceStore';
 import { useEffect } from 'react';
 import { useNavigate, generatePath } from 'react-router-dom';
+import { motion } from "framer-motion"
+import { MousePointer2 } from 'lucide-react'
 import { useAppContext } from '@/context/AuthProvider';
 
 export default function BoardCard() {
@@ -24,7 +26,7 @@ export default function BoardCard() {
         if (me?.id === userId) return "You";
         const foundUser = others.find(u => u.id === userId);
         // Fallback to truncated userId if name is not found through presence
-        return foundUser?.name || `User ${userId.slice(0, 8)}...`; 
+        return foundUser?.name || `User ${userId.slice(0, 8)}...`;
     };
 
     const handleClick = (boardId: string) => {
@@ -35,7 +37,49 @@ export default function BoardCard() {
 
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-center flex-col gap-4">
+
+            <div className="text-center mb-12">
+                <div className="flex justify-center relative w-48 h-32 mx-auto mb-8">
+                    {/* Green cursor - moves in a different path */}
+                    <motion.div
+                        className="absolute text-green-500"
+                        animate={{
+                            x: [80, 100, 70, 90, 80],
+                            y: [40, 60, 80, 50, 40],
+                        }}
+                        transition={{
+                            duration: 6,
+                            repeat: Number.POSITIVE_INFINITY,
+                            ease: "easeInOut",
+                        }}
+                    >
+                        <MousePointer2 size={20} />
+                    </motion.div>
+
+                    {/* Orange cursor - moves in its own path */}
+                    <motion.div
+                        className="absolute text-orange-500"
+                        animate={{
+                            x: [120, 140, 110, 130, 120],
+                            y: [80, 100, 70, 90, 80],
+                        }}
+                        transition={{
+                            duration: 5,
+                            repeat: Number.POSITIVE_INFINITY,
+                            ease: "easeInOut",
+                        }}
+                    >
+                        <MousePointer2 size={20} />
+                    </motion.div>
+                </div>
+
+                <h2 className="text-2xl font-semibold mb-1">Create realtime experiences</h2>
+                <p className="text-muted-foreground mb-6">
+                   Make a kanban board today in real-time collaboration.
+                </p>
+            </div>
+
             <h2 className="heading-L text-black dark:text-white mb-4 mt-4 px-4">Browse All Boards</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {boards.map((board) => (

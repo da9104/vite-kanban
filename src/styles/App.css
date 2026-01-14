@@ -69,3 +69,12 @@ input[type="checkbox"] {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+@keyframes cursor-float {
+  0%, 100% { transform: translateX(132px) translateY(90px); }
+  50% { transform: translateX(140px) translateY(80px); }
+}
+
+.cursor-animated {
+  animation: cursor-float 3s ease-in-out infinite;
+}
