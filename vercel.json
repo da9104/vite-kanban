@@ -1,5 +1,5 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "functions": {
     "api/auth.js": {
       "includeFiles": "dist/client/**"
