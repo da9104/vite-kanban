@@ -56,8 +56,8 @@ function Home() {
     if (!loading) {
       if (boards.length > 0) { 
         if (boardId) {
-          const filteredBoards = boards.filter(board => board.user_id === session?.user?.id);
-          if (filteredBoards) {
+          const boardExists = boards.some(b => b.id === boardId); 
+          if (boardExists) {
             setActiveBoardById(boardId);
           } else {
             if (boards[0]?.id) navigate(`/${boards[0].id}`, { replace: true });
@@ -76,16 +76,22 @@ function Home() {
     return <div>Loading boards...</div>
   }
 
+  if (boards.length === 0) {
+    return (
+      <div>
+        {session && <PresenceManager />}
+        <EmptyBoard type="ADD" />
+      </div>
+    );
+  }
+
   return (
     <div>
       {session && <PresenceManager />}
-      {session ? ( 
-        boards.length === 0 ? <EmptyBoard type="ADD" /> : <Board />
-      ) : <Login />
-      }
-
+      {session ? <Board /> : <Login />}
     </div>
   )
 }
 
 export default App
+
