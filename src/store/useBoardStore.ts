@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { supabase } from '@/lib/supabaseClient'; // Import supabase client
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from "sonner"
 
 export interface Subtask { id?: string; title: string; isCompleted: boolean; task_id?: string; position?: number; }
 export interface Task { id?: string; title: string; description: string; status: string; position: number; subtasks: Subtask[]; column_id?: string; board_id?: string; }
@@ -71,6 +72,7 @@ const useBoardStore = create<BoardState>()(
                 }
 
             } catch (error) {
+                toast.error("Error fetching boards:")
                 console.error("Error fetching boards:", error);
                 set({ loading: false });
             }
@@ -122,6 +124,7 @@ const useBoardStore = create<BoardState>()(
                 console.log("addBoard: Boards re-fetched successfully."); // DEBUG LOG
         
             } catch (error) {
+                toast.error("Error in addBoard action:")
                 console.error("Error in addBoard action:", error); 
             }
         },
@@ -186,6 +189,7 @@ const useBoardStore = create<BoardState>()(
                 await get().fetchBoards();
 
             } catch (error) {
+                toast.error("Error editing board:")
                 console.error("Error editing board:", error);
             }
         },
@@ -205,6 +209,7 @@ const useBoardStore = create<BoardState>()(
                 await get().fetchBoards();
             }
             catch (error) {
+                toast.error("Error deleting board:")
                 console.error("Error deleting board:", error);
             }
         },
@@ -270,6 +275,7 @@ const useBoardStore = create<BoardState>()(
                 await get().fetchBoards();
 
             } catch (error) {
+                toast.error("Error adding task:")
                 console.error("Error adding task:", error);
             }
         },
@@ -332,6 +338,7 @@ const useBoardStore = create<BoardState>()(
                  await get().fetchBoards();
  
              } catch (error) {
+                 toast.error("Error editing task:")
                  console.error("Error editing task:", error);
              }
          },
@@ -406,6 +413,7 @@ const useBoardStore = create<BoardState>()(
 
                 if (error) throw error;
             } catch (error) {
+                toast.error("Error updating subtask:")
                 console.error("Error updating subtask:", error);
                 await get().fetchBoards(); // Revert
             }
@@ -431,6 +439,7 @@ const useBoardStore = create<BoardState>()(
             const task = column.tasks[taskIndex];
 
             if (!task?.id) {
+                toast.error("Cannot delete task: Task ID not found")
                 console.error("Cannot delete task: Task ID not found");
                 return;
             }
@@ -456,6 +465,7 @@ const useBoardStore = create<BoardState>()(
                 await get().fetchBoards();
 
             } catch (error) {
+                toast.error("Error deleting task:")
                 console.error("Error deleting task:", error);
             }
         },

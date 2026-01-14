@@ -9,7 +9,8 @@ import Login from '@/components/Login'
 import { AuthProvider, useAppContext } from '@/context/AuthProvider';
 import PresenceManager from '@/context/PresenceManager'
 import { useEffect } from 'react';
-import BoardCard from '@/components/BoardCard';
+// import BoardCard from '@/components/BoardCard';
+import { Toaster } from "@/components/ui/Sonner"
 
 
 function Layout() {
@@ -30,6 +31,7 @@ function App() {
 
   return (
     <AuthProvider>
+      <Toaster />
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
@@ -46,7 +48,6 @@ function Home() {
   const navigate = useNavigate();
   const { boards, loading, fetchBoards } = useBoardStore();
   const setActiveBoardById = useBoardStore((state) => state.setActiveBoardById)
-  const filteredBoards = boards.filter(board => board.user_id === session?.user?.id);
   const { session } = useAppContext();
 
   useEffect(() => {
@@ -55,15 +56,17 @@ function Home() {
 
   useEffect(() => {
     if (!loading) {
-      if (boards.length > 0) { 
+      if (boards.length > 0) {
         if (boardId) {
-          const boardExists = boards.some(b => b.id === boardId); 
+          const boardExists = boards.some(b => b.id === boardId);
           if (boardExists) {
             setActiveBoardById(boardId);
           } else {
+            // If the boardId doesn't exist, redirect to the first available board
             if (boards[0]?.id) navigate(`/${boards[0].id}`, { replace: true });
           }
         } else {
+          // If no boardId in URL, try to find the active one or default to the first one
           const boardToRedirect = boards.find((b) => b.isActive) || boards[0];
           if (boardToRedirect?.id) {
             navigate(`/${boardToRedirect.id}`, { replace: true });
@@ -71,13 +74,14 @@ function Home() {
         }
       }
     }
-  }, [boardId, boards, loading, setActiveBoardById, navigate, filteredBoards]);
+  }, [boardId, boards, loading, setActiveBoardById, navigate, session]);
 
   if (loading) {
-    return <div>Loading boards...</div>
+    return <div>Loading boards...</div>;
   }
 
-  if (filteredBoards.length === 0) {
+  // If no boards at all, show EmptyBoard (for logged-in users) or EmptyBoard (for guests, but they can't create)
+  if (boards.length === 0) {
     return (
       <div>
         {session && <PresenceManager />}
@@ -86,12 +90,24 @@ function Home() {
     );
   }
 
-  return (
-    <div>
-      {session && <PresenceManager />}
-      {session ? ( filteredBoards.length > 0 ? <Board /> : <EmptyBoard type="ADD" /> ) : <Login />}
-    </div>
-  )
+  // If there are boards
+  if (session) {
+    // User is logged in, show the Board
+    return (
+      <div>
+        {session && <PresenceManager />}
+        <Board />
+      </div>
+    );
+  } else {
+    // User is not logged in, but there are boards, so show login (where they can browse)
+    return (
+      <div>
+        {/* PresenceManager is only for logged in users */}
+        <Login />
+      </div>
+    );
+  }
 }
 
 export default App

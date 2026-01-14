@@ -17,8 +17,8 @@ export default function Header() {
     const isDesktop = useMediaQuery({ query: "(min-width: 768px)" })
     const { session, randomUsername, setUsername, username } = useAppContext();
     const boards = useBoardStore((state) => state.boards);
-    // Use the active board from the full list, not filtered, so guests can see the title
     const board = boards.find((board) => board.isActive); 
+    const filteredBoards = boards.filter(board => board.user_id === session?.user?.id);
     const deleteBoard = useBoardStore((state) => state.deleteBoard)
     const setBoardActive = useBoardStore((state) => state.setBoardActive)
     const [openDropdown, setOpenDropdown] = useState(false);
@@ -27,6 +27,7 @@ export default function Header() {
     const [boardType, setBoardType] = useState("");
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+
 
     const onDropdownClick = () => {
         setOpenDropdown((state) => !state)
@@ -65,7 +66,9 @@ export default function Header() {
                 </div>
 
                 <div className='header-name-container heading-L'>
-                    <h3 className='header-name'>{board && board.name}</h3>
+                    <h3 className='header-name'>
+                        {board && board.name}
+                        </h3>
                     {!isDesktop && (openDropdown ? <ChevronUp onClick={() => { onDropdownClick() }} /> : <ChevronDown onClick={() => { onDropdownClick() }} />)}
                 </div>
 

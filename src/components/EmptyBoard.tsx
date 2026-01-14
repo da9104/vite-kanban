@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AddEditBoardModal from '@/components/modals/AddEditBoardModal'
 import { useAppContext } from '@/context/AuthProvider'; // Import useAppContext
+import Login from '@/components/Login';
 
 interface EmptyBoardProps {
     type: string;
@@ -30,7 +31,6 @@ export default function EmptyBoard({ type }: EmptyBoardProps) {
                     {type === 'EDIT' ? "+ Add new Column" : "+ Add New Board"}
                 </button>
             )}
-
                {isBoardModalOpen && <AddEditBoardModal type={type} setIsBoardModalOpen={closeBoardModal} />}
         </div>
     )
