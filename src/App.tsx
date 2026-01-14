@@ -1,5 +1,5 @@
 import './styles/App.css'
-import { Routes, Route, Outlet, useParams, useNavigate } from 'react-router-dom';
+import { Routes, Route, Outlet, useParams, useNavigate, Navigate } from 'react-router-dom';
 import useBoardStore from '@/store/useBoardStore';
 import useThemeStore from '@/store/useThemeStore'
 import Header from '@/components/ui/Header'
@@ -9,30 +9,29 @@ import Login from '@/components/Login'
 import { AuthProvider, useAppContext } from '@/context/AuthProvider';
 import PresenceManager from '@/context/PresenceManager'
 import { useEffect } from 'react';
-// import BoardCard from '@/components/BoardCard';
 import { Toaster } from "@/components/ui/Sonner"
 
 
 function Layout() {
   const { theme } = useThemeStore()
-
+  const { session } = useAppContext();
+  if (!session) return <Navigate to="/login" replace />;
   return (
-    <>
       <div className={`app ${theme}`}>
         <Header />
         <Outlet />
       </div>
-    </>
   )
 }
 
 function App() {
-
-
   return (
     <AuthProvider>
       <Toaster />
       <Routes>
+        {/* Public login route - no layout */}
+        <Route path="/login" element={<Login />} />
+        
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path=":boardId" element={<Home />} />
