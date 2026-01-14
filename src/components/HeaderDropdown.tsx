@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { EllipsisVertical } from 'lucide-react';
 import ElipsisMenu from '@/components/ui/ElipsisMenu';
 import DeleteModal from '@/components/modals/DeleteModal';
+import { useAppContext } from '@/context/AuthProvider';
 
 interface HeaderDropdownProps {
     setOpenDropdown?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -15,14 +16,16 @@ interface HeaderDropdownProps {
 }
 
 export default function HeaderDropdown({ setOpenDropdown, setIsBoardModalOpen, setBoardType }: HeaderDropdownProps) {
+    const { session } = useAppContext();
     const { theme, toggleTheme } = useThemeStore()
     const boards = useBoardStore((state) => state.boards);
-    const setBoardActive = useBoardStore((state) => state.setBoardActive)
+    const setActiveBoardById = useBoardStore((state) => state.setActiveBoardById)
     const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const deleteBoard = useBoardStore((state) => state.deleteBoard)
     const navigate = useNavigate();
 
+    const filteredBoards = boards.filter(board => board.user_id === session?.user?.id);
     const activeBoard = boards.find(b => b.isActive);
 
     const setOpenEditModal = () => {
@@ -56,9 +59,9 @@ export default function HeaderDropdown({ setOpenDropdown, setIsBoardModalOpen, s
             }}
         >
             <div className='dropdown-modal'>
-                <h3> ALL BOARDS ({boards.length}) </h3>
+                <h3> ALL BOARDS ({filteredBoards.length}) </h3>
                 <div className='dropdown-boards'>
-                    {boards.map((board, index) => {
+                    {filteredBoards.map((board, index) => {
                         return (
                             <div className={`dropdown-board ${board.isActive ? "board-active" : ""}`}
                                 key={index}
@@ -75,44 +78,48 @@ export default function HeaderDropdown({ setOpenDropdown, setIsBoardModalOpen, s
                                         {board.name}
                                     </p>
 
-                                    <div className='relative flex items-center'>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setOpenMenuIndex(openMenuIndex === index ? null : index)
-                                            }}
-                                            className='!z-[999]'
-                                        >
-                                            <EllipsisVertical size={18} />
-                                        </button>
-                                        {openMenuIndex === index && (
-                                            <ElipsisMenu
-                                                setOpenEditModal={() => {
-                                                    setBoardActive(index)
-                                                    setOpenEditModal()
+                                    {session && ( // Only show ellipsis for logged-in users
+                                        <div className='relative flex items-center'>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setOpenMenuIndex(openMenuIndex === index ? null : index)
                                                 }}
-                                                setOpenDeleteModal={() => { 
-                                                    setBoardActive(index)
-                                                    setOpenDeleteModal() 
-                                                }}
-                                                type="board"
-                                            />
-                                        )}
-                                    </div>
+                                                className='!z-[999]'
+                                            >
+                                                <EllipsisVertical size={18} />
+                                            </button>
+                                            {openMenuIndex === index && (
+                                                <ElipsisMenu
+                                                    setOpenEditModal={() => {
+                                                        if (board.id) setActiveBoardById(board.id)
+                                                        setOpenEditModal()
+                                                    }}
+                                                    setOpenDeleteModal={() => { 
+                                                        if (board.id) setActiveBoardById(board.id)
+                                                        setOpenDeleteModal() 
+                                                    }}
+                                                    type="board"
+                                                />
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                             </div>
                         )
                     })}
-                    <div className='dropdown-board dropdown-create-board-btn'
-                        onClick={() => {
-                            setBoardType("ADD")
-                            setIsBoardModalOpen(true)
-                            setOpenDropdown?.(prev => !prev)
-                        }}
-                    >
-                        + Create New Board
-                    </div>
+                    {session && ( // Only show Create New Board for logged-in users
+                        <div className='dropdown-board dropdown-create-board-btn'
+                            onClick={() => {
+                                setBoardType("ADD")
+                                setIsBoardModalOpen(true)
+                                setOpenDropdown?.(prev => !prev)
+                            }}
+                        >
+                            + Create New Board
+                        </div>
+                    )}
                 </div>
 
                 <div className='theme-toggle'>

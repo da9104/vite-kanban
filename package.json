@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
@@ -29,14 +30,13 @@
     "react-responsive": "^10.0.1",
     "react-router-dom": "^7.12.0",
     "sirv": "^3.0.2",
-    "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3",
     "tailwindcss": "^4.1.18",
     "uuid": "^13.0.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.10.4",
     "@types/react": "^19.2.5",

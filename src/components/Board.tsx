@@ -7,8 +7,10 @@ import SideBar from '@/components/ui/SideBar'
 import './Board.css'
 import AddEditBoardModal from '@/components/modals/AddEditBoardModal'
 import Cursor from "@/components/ui/Cursor";
+import { useAppContext } from "@/context/AuthProvider";
 
 export default function Board() {
+    const { session } = useAppContext();
     const [isSideBarOpen, setIsSideBarOpen] = useState(true);
     const [isBoardModalOpen, setIsBoardModalOpen] = useState(false);
     const isDesktop = useMediaQuery({ query: "(min-width: 768px)" })
@@ -31,13 +33,15 @@ export default function Board() {
                         {columns.map((_, index) => {
                             return ( <Column key={index} colIndex={index} />  )
                         })}
-                        <div className="add-column-column heading-XL"
-                            onClick={() => { setIsBoardModalOpen(true) }}>
-                            + New Column
-                        </div>
+                        {session && (
+                            <div className="add-column-column heading-XL"
+                                onClick={() => { setIsBoardModalOpen(true) }}>
+                                + New Column
+                            </div>
+                        )}
                     </>
                 ) : (
-                    <EmptyBoard type="EDIT" />
+                    session ? <EmptyBoard type="EDIT" /> : <div className="board-empty"><h3 className="board-empty-text">This board is empty.</h3></div>
                 )}
                 {isBoardModalOpen && <AddEditBoardModal type="EDIT" setIsBoardModalOpen={closeBoardModal} />}
             </div>

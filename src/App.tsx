@@ -9,6 +9,7 @@ import Login from '@/components/Login'
 import { AuthProvider, useAppContext } from '@/context/AuthProvider';
 import PresenceManager from '@/context/PresenceManager'
 import { useEffect } from 'react';
+import BoardCard from '@/components/BoardCard';
 
 
 function Layout() {
@@ -25,6 +26,7 @@ function Layout() {
 }
 
 function App() {
+
 
   return (
     <AuthProvider>
@@ -44,25 +46,31 @@ function Home() {
   const navigate = useNavigate();
   const { boards, loading, fetchBoards } = useBoardStore();
   const setActiveBoardById = useBoardStore((state) => state.setActiveBoardById)
+  const { session } = useAppContext();
 
   useEffect(() => {
     fetchBoards();
   }, [fetchBoards]);
 
   useEffect(() => {
-    if (!loading && boards.length > 0) {
-      if (boardId) {
-        setActiveBoardById(boardId);
-      } else {
-        const boardToRedirect = boards.find((b) => b.isActive) || boards[0];
-        if (boardToRedirect?.id) {
-          navigate(`/${boardToRedirect.id}`, { replace: true });
+    if (!loading) {
+      if (boards.length > 0) { 
+        if (boardId) {
+          const boardExists = boards.some(b => b.id === boardId); 
+          if (boardExists) {
+            setActiveBoardById(boardId);
+          } else {
+            if (boards[0]?.id) navigate(`/${boards[0].id}`, { replace: true });
+          }
+        } else {
+          const boardToRedirect = boards.find((b) => b.isActive) || boards[0];
+          if (boardToRedirect?.id) {
+            navigate(`/${boardToRedirect.id}`, { replace: true });
+          }
         }
       }
     }
   }, [boardId, boards, loading, setActiveBoardById, navigate]);
-
-  const { session } = useAppContext();
 
   if (loading) {
     return <div>Loading boards...</div>
@@ -71,7 +79,8 @@ function Home() {
   return (
     <div>
       {session && <PresenceManager />}
-      {session ? (boards.length > 0 ? (<Board />) : (<EmptyBoard type="ADD" />)) : <Login />}
+      {session ? ( boards.length > 0 ? <Board /> : <EmptyBoard type="ADD" /> ) : <Login />}
+
     </div>
   )
 }

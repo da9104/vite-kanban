@@ -3,7 +3,6 @@ import type { Dispatch, SetStateAction, ReactNode } from 'react';
 import { supabase } from "@/lib/supabaseClient";
 import { usePresenceStore, type User } from "@/store/usePresenceStore";
 import PresenceManager from './PresenceManager';
-import { socket } from "@/lib/socket";
 import { getColorFromString } from "@/lib/colors"; // Import the color utility
 
 type StringSetter = Dispatch<SetStateAction<string>>;
@@ -35,6 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return `@user${Date.now().toString().slice(-4)}`;
   };
 
+ 
   // Handles setting the session from Supabase auth state
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -68,9 +68,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       
       setMe(currentUser);
-      socket.auth = { userId: session.user.id };
-      socket.connect();
-      socket.emit("join-app", currentUser);
     } else {
       // Guest user logic
       currentUsername = localStorage.getItem("username") || randomUsername();
@@ -86,9 +83,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       
       setMe(currentUser);
-      socket.auth = { userId: guestId };
-      socket.connect();
-      socket.emit("join-app", currentUser);
     }
     setUsername(currentUsername);
 

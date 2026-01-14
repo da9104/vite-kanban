@@ -15,8 +15,10 @@ import { useAppContext } from '@/context/AuthProvider'
 
 export default function Header() {
     const isDesktop = useMediaQuery({ query: "(min-width: 768px)" })
+    const { session, randomUsername, setUsername, username } = useAppContext();
     const boards = useBoardStore((state) => state.boards);
-    const board = boards.find((board) => board.isActive);
+    // Use the active board from the full list, not filtered, so guests can see the title
+    const board = boards.find((board) => board.isActive); 
     const deleteBoard = useBoardStore((state) => state.deleteBoard)
     const setBoardActive = useBoardStore((state) => state.setBoardActive)
     const [openDropdown, setOpenDropdown] = useState(false);
@@ -25,8 +27,6 @@ export default function Header() {
     const [boardType, setBoardType] = useState("");
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-
-    const { session, randomUsername, setUsername, username } = useAppContext();
 
     const onDropdownClick = () => {
         setOpenDropdown((state) => !state)
@@ -77,7 +77,8 @@ export default function Header() {
                     </button>
                 }
 
-                {board && board.columns.length > 0 ? <button className={`add-task-btn heading-M ${board.columns.length === 0 && "btn-off"}`}
+                {/* Only show Add Task button if user is logged in AND there's a board with columns */}
+                {session && board && board.columns.length > 0 ? <button className={`add-task-btn heading-M ${board.columns.length === 0 && "btn-off"}`}
                     onClick={() => {
                         setIsTaskModalOpen(true)
                         setIsElipsisMenuOpen(false)

@@ -8,6 +8,7 @@ interface EmptyBoardProps {
 export default function EmptyBoard({ type }: EmptyBoardProps) {
     const [isBoardModalOpen, setIsBoardModalOpen] = useState(false)
 
+
     const closeBoardModal = () => {
         setIsBoardModalOpen(false);
     };
@@ -26,6 +27,7 @@ export default function EmptyBoard({ type }: EmptyBoardProps) {
                 className='add-column-btn'>
                 {type === 'EDIT' ? "+ Add new Column" : "+ Add New Board"}
             </button>
+
                {isBoardModalOpen && <AddEditBoardModal type={type} setIsBoardModalOpen={closeBoardModal} />}
         </div>
     )

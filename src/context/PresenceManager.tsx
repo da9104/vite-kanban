@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { usePresenceStore } from '@/store/usePresenceStore';
-import useBoardStore from '@/store/useBoardStore'; // Import board store
-import { socket } from '@/lib/socket';
+import useBoardStore from '@/store/useBoardStore';
+import { supabase } from '@/lib/supabaseClient';
 import type { User, Cursor } from '@/store/usePresenceStore';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 // A simple throttle function to limit how often we send events
 const throttle = (func: (...args: any[]) => void, limit: number) => {
@@ -17,11 +18,14 @@ const throttle = (func: (...args: any[]) => void, limit: number) => {
 };
 
 const PresenceManager = () => {
-  const { me, setMyCursor, setOthers, addOther, updateOtherCursor, removeOther } = usePresenceStore();
-  const activeBoard = useBoardStore(state => state.boards.find(b => b.isActive)); // Get active board
+  const { me, setMyCursor, setOthers, updateOtherCursor } = usePresenceStore();
+  const activeBoard = useBoardStore(state => state.boards.find(b => b.isActive));
 
-  // Effect to handle this client's mouse movements
   useEffect(() => {
+    if (!me) return;
+
+    const channel = supabase.channel('room1');
+
     const handleMouseMove = throttle((event: MouseEvent) => {
       const { clientX, clientY } = event;
       const x = (clientX / window.innerWidth) * 100;
@@ -30,63 +34,60 @@ const PresenceManager = () => {
       // Update our own cursor in the local store
       setMyCursor({ x, y });
 
-      // Broadcast our cursor position to others, including the boardId
-      if (me && activeBoard) {
-        socket.emit('cursor-move', { 
-          id: me.id, 
-          cursor: { x, y },
-          boardId: activeBoard.name // Send the board ID
+      // Broadcast our cursor position via Supabase
+      if (activeBoard) {
+        channel.send({
+          type: 'broadcast',
+          event: 'cursor-move',
+          payload: {
+            id: me.id,
+            cursor: { x, y },
+            boardId: activeBoard.name
+          }
         });
       }
-    }, 50); // Throttle to 20 times per second
+    }, 50);
+
+    // Subscribe to the channel
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const newState = channel.presenceState();
+        const users: User[] = [];
+        
+        // Flatten the presence state object into an array of users
+        for (const id in newState) {
+          const userStates = newState[id] as unknown as User[];
+          // Typically we just take the first state object for a given presence key (user)
+          // Adjust based on if you allow multiple sessions per user or not.
+          // Here we filter out ourself implicitly in the store, but good to check.
+          userStates.forEach(user => {
+             if (user.id !== me.id) {
+               users.push(user);
+             }
+          });
+        }
+        setOthers(users);
+      })
+      .on('broadcast', { event: 'cursor-move' }, (payload) => {
+         const { id, cursor, boardId } = payload.payload;
+         updateOtherCursor(id, cursor, boardId);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+           // Track our presence once connected
+           await channel.track(me);
+        }
+      });
 
     window.addEventListener('mousemove', handleMouseMove);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
+      supabase.removeChannel(channel);
     };
-  }, [setMyCursor, me, activeBoard]); // Add activeBoard to dependencies
+  }, [me, activeBoard, setMyCursor, setOthers, updateOtherCursor]);
 
-  // Effect to listen for socket events from the server
-  useEffect(() => {
-    
-    const onConnect = () => {
-      if (me) socket.emit('join-app', me);
-    }
-
-    const onOthers = (users: User[]) => {
-      setOthers(users);
-    }
-
-    const onUserJoined = (user: User) => {
-      addOther(user);
-    }
-
-    // Listen for cursor updates from other users
-    const onCursorUpdate = ({ id, cursor, boardId }: { id: string, cursor: Cursor, boardId: string }) => {
-      updateOtherCursor(id, cursor, boardId);
-    }
-
-    const onUserLeave = ({ id }: { id: string }) => {
-      removeOther(id);
-    }
-
-    socket.on('connect', onConnect);
-    socket.on('others-present', onOthers);
-    socket.on('user-joined', onUserJoined);
-    socket.on('cursor-update', onCursorUpdate);
-    socket.on('user-leave', onUserLeave);
-
-    return () => {
-      socket.off('connect', onConnect);
-      socket.off('others-present', onOthers);
-      socket.off('user-joined', onUserJoined);
-      socket.off('cursor-update', onCursorUpdate);
-      socket.off('user-leave', onUserLeave);
-    };
-  }, [me, setOthers, addOther, updateOtherCursor, removeOther]);
-
-  return null; // This component does not render anything
+  return null; 
 };
 
 export default PresenceManager;

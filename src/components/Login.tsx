@@ -1,6 +1,7 @@
 
 import { supabase } from "../lib/supabaseClient";
 import { useAppContext } from '@/context/AuthProvider'
+import BoardCard from '@/components/BoardCard'
 
 export default function Login() {
     const { username } = useAppContext();
@@ -8,6 +9,8 @@ export default function Login() {
     return (
         <main className=" flex min-h-screen flex-col items-center justify-center">
             <div className="w-full max-w-lg space-y-8 flex flex-col gap-2 items-center animate-[fade-in_0.5s_ease-in-out]">
+
+                <BoardCard />
                 {/* Google logo */}
                 <div className="w-12 h-12 relative">
                     <svg viewBox="0 0 24 24" className="w-full h-full">
@@ -29,8 +32,8 @@ export default function Login() {
                         />
                     </svg>
                 </div>
-                
-                <h2 className="text-2xl font-600"> Login with Google </h2>  
+
+                <h2 className="text-2xl font-600"> Login with Google </h2>
 
                 <p className="p-10 ">Welcome! {username} Please sign in to manage your tasks.</p>
 
@@ -56,12 +59,12 @@ export default function Login() {
                             },
                         })
                     }
-                        >
-                        Sign in with Google 
+                >
+                    Sign in with Google
                 </button>
 
-            {/* <div className="w-full mt-8">{user ? <WelcomeMessage user={user} /> : <LoginButton />}</div> */}
-        </div>
+                {/* <div className="w-full mt-8">{user ? <WelcomeMessage user={user} /> : <LoginButton />}</div> */}
+            </div>
         </main >
     )
 }

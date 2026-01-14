@@ -2,8 +2,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 import fs from 'node:fs/promises'
 import express from 'express'
-import http from 'http';
-import { Server } from 'socket.io';
+import cors from 'cors'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 import { createClient } from './server/supabase.js';
@@ -13,52 +12,11 @@ import cookieParser from 'cookie-parser';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 export const app = express()
-const server = http.createServer(app);
 
-// Initialize Socket.IO
-const io = new Server(server, {
-  cors: {
-    origin: "https://vite-kanban.vercel.app/",
-    methods: ["GET", "POST"],
-    credentials: true,
-  }
-});
-
-// Socket.IO connection handler
-const onlineUsers = new Map(); // Maps socket.id to user object
-
-io.on('connection', (socket) => {
-  console.log('✅ Client connected:', socket.id);
-
-  // When a user joins, store their data and notify others
-  socket.on('join-app', (user) => {
-    // Tell the new user about everyone else who is already there
-    const others = Array.from(onlineUsers.values());
-    socket.emit('others-present', others);
-
-    // Store the new user's data
-    onlineUsers.set(socket.id, user);
-
-    // Tell everyone else that a new user has joined
-    socket.broadcast.emit('user-joined', user);
-  });
-
-  // When a user moves their cursor, broadcast it to others
-  socket.on('cursor-move', (cursorData) => {
-    socket.broadcast.emit('cursor-update', cursorData);
-  });
-
-  // When a user disconnects, remove them and notify others
-  socket.on('disconnect', () => {
-    console.log('🔌 Client disconnected:', socket.id);
-    const user = onlineUsers.get(socket.id);
-    if (user) {
-      onlineUsers.delete(socket.id);
-      // Tell everyone else that this user has left
-      socket.broadcast.emit('user-leave', { id: user.id });
-    }
-  });
-});
+app.use(cors({
+  origin: `${process.env.NODE_ENV !== 'production' ? 'http://localhost:4000' : process.env.VITE_SERVER_UR}`,
+  credentials: true
+}));
 
 app.use(cookieParser());
 app.use(express.static(join(__dirname, 'dist/client'), { index: false }))
@@ -99,6 +57,7 @@ app.use('/api/auth', authRoutes)
 app.use('*all', async (req, res) => {
   try {
     const url = req.originalUrl.replace(base, '')
+    // @ts-ignore
     const supabase = createClient(req, res)
     
     /** @type {string} */
@@ -108,10 +67,13 @@ app.use('*all', async (req, res) => {
     if (!isProduction) {
       // Always read fresh template in development
       template = await fs.readFile('./index.html', 'utf-8')
+      // @ts-ignore
       template = await vite.transformIndexHtml(url, template)
+      // @ts-ignore
       render = (await vite.ssrLoadModule('/src/entry-server.tsx')).render
     } else {
       template = templateHtml
+      // @ts-ignore
       render = (await import('./dist/server/entry-server.js')).render
     }
     
@@ -126,15 +88,18 @@ app.use('*all', async (req, res) => {
 
     res.status(200).set({ 'Content-Type': 'text/html' }).send(finalHtml)
   } catch (e) {
+    // @ts-ignore
     vite?.ssrFixStacktrace(e)
+    // @ts-ignore
     console.log(e.stack)
+    // @ts-ignore
     res.status(500).end(e.stack)
   }
 })
 
 // Start the server
 if (!process.env.VERCEL) {
-  server.listen(port, () => {
+  app.listen(port, () => {
     console.log(`Server started at http://localhost:${port}`)
   })
 }
