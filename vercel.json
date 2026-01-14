@@ -1,0 +1,8 @@
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+  "functions": {
+    "api/auth.js": {
+      "includeFiles": "dist/client/**"
+    }
+  }
+}
