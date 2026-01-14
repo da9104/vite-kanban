@@ -46,6 +46,7 @@ function Home() {
   const navigate = useNavigate();
   const { boards, loading, fetchBoards } = useBoardStore();
   const setActiveBoardById = useBoardStore((state) => state.setActiveBoardById)
+  const filteredBoards = boards.filter(board => board.user_id === session?.user?.id);
   const { session } = useAppContext();
 
   useEffect(() => {
@@ -70,13 +71,13 @@ function Home() {
         }
       }
     }
-  }, [boardId, boards, loading, setActiveBoardById, navigate]);
+  }, [boardId, boards, loading, setActiveBoardById, navigate, filteredBoards]);
 
   if (loading) {
     return <div>Loading boards...</div>
   }
 
-  if (boards.length === 0) {
+  if (filteredBoards.length === 0) {
     return (
       <div>
         {session && <PresenceManager />}
@@ -88,7 +89,7 @@ function Home() {
   return (
     <div>
       {session && <PresenceManager />}
-      {session ? <Board /> : <Login />}
+      {session ? ( filteredBoards.length > 0 ? <Board /> : <EmptyBoard type="ADD" /> ) : <Login />}
     </div>
   )
 }
