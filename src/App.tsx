@@ -54,19 +54,22 @@ function Home() {
   }, [fetchBoards]);
 
   useEffect(() => {
-    if (!loading) {
-      if (boards.length > 0) {
+    if (!loading && boards.length > 0) {
+      const userId = session?.user?.id;
+      const filteredBoards = userId 
+        ? boards.filter(board => board.user_id === userId) 
+        : boards;  // Guests see all (or implement public filter)
+
+      if (filteredBoards.length > 0) {
         if (boardId) {
-          const boardExists = boards.some(b => b.id === boardId);
+          const boardExists = filteredBoards.some(b => b.id === boardId);
           if (boardExists) {
             setActiveBoardById(boardId);
-          } else {
-            // If the boardId doesn't exist, redirect to the first available board
-            if (boards[0]?.id) navigate(`/${boards[0].id}`, { replace: true });
+          } else if (filteredBoards[0]?.id) {
+            navigate(`/${filteredBoards[0].id}`, { replace: true });
           }
         } else {
-          // If no boardId in URL, try to find the active one or default to the first one
-          const boardToRedirect = boards.find((b) => b.isActive) || boards[0];
+          const boardToRedirect = filteredBoards.find(b => b.isActive) || filteredBoards[0];
           if (boardToRedirect?.id) {
             navigate(`/${boardToRedirect.id}`, { replace: true });
           }
@@ -79,34 +82,16 @@ function Home() {
     return <div>Loading boards...</div>;
   }
 
-  // If no boards at all, show EmptyBoard (for logged-in users) or EmptyBoard (for guests, but they can't create)
   if (boards.length === 0) {
-    return (
-      <div>
-        {session && <PresenceManager />}
-        <EmptyBoard type="ADD" />
-      </div>
-    );
+    return session ? <EmptyBoard type="ADD" /> : null;  // Guests shouldn't create
   }
 
-  // If there are boards
-  if (session) {
-    // User is logged in, show the Board
-    return (
-      <div>
-        {session && <PresenceManager />}
-        <Board />
-      </div>
-    );
-  } else {
-    // User is not logged in, but there are boards, so show login (where they can browse)
-    return (
-      <div>
-        {/* PresenceManager is only for logged in users */}
-        <Login />
-      </div>
-    );
-  }
+  return (
+    <div>
+      <PresenceManager />  {/* Only renders if session exists */}
+      <Board />
+    </div>
+  );
 }
 
 export default App
