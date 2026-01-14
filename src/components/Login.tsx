@@ -52,7 +52,7 @@ export default function Login() {
                         supabase.auth.signInWithOAuth({
                             provider: "google",
                             options: {
-                                redirectTo: 'https://vite-kanban.vercel.app/auth/callback',
+                                redirectTo: 'https://vite-kanban.vercel.app/api/auth/callback',
                             },
                         })
                     }
