@@ -18,12 +18,7 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: (origin, callback) => {
-      // This is a flexible but insecure CORS policy for development.
-      // It allows any origin that sends an `Origin` header.
-      // For production, you should replace this with a specific whitelist of domains.
-      callback(null, origin || true);
-    },
+    origin: "https://vite-kanban.vercel.app/",
     methods: ["GET", "POST"],
     credentials: true,
   }
