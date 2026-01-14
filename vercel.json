@@ -1,13 +1,8 @@
 {
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }],
   "functions": {
-    "api/auth.js": {
-      "includeFiles": "dist/**"
+    "api/index.js": {
+      "includeFiles": "dist/client/**"
     }
   }
 }
