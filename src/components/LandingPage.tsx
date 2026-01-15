@@ -79,9 +79,11 @@ export default function LandingPage() {
                 </p>
             </div>
 
-            <h2 className="heading-L text-black dark:text-white mb-4 mt-4 px-4">Browse All Boards</h2>
            
-            <section className="bg-background p-8 flex w-full max-w-4xl mx-auto">
+            <section className="bg-background p-8 flex flex-col w-full max-w-4xl mx-auto">
+            <h2 className="font-bold text-sm text-[#635fc7] mb-4 mt-4 px-4 text-right py-4! uppercase">
+               Totall {boards.length}  Boards
+            </h2>
                 <BoardCards boards={boards} handleClick={handleClick} getOwnerName={getOwnerName} />
             </section>
         </div>
