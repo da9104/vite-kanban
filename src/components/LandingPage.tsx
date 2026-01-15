@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useNavigate, generatePath } from 'react-router-dom';
 import { motion } from "framer-motion"
 import { MousePointer2 } from 'lucide-react'
+import BoardCards from '@/components/ui/BoardCards'
 
 export default function LandingPage() {
     const boards = useBoardStore((state) => state.boards);
@@ -36,7 +37,7 @@ export default function LandingPage() {
 
 
     return (
-        <div className="flex items-center justify-center flex-col gap-4 leading-9">
+        <div className="flex flex-col gap-4 leading-9 justify-center items-center">
             <div className="text-center mb-12">
                 <div className="flex justify-center relative w-48 h-32 mx-auto mb-8">
                     {/* Green cursor - moves in a different path */}
@@ -74,35 +75,15 @@ export default function LandingPage() {
 
                 <h2 className="text-2xl font-semibold mb-1">Create realtime experiences</h2>
                 <p className="text-muted-foreground mb-6">
-                   Make a kanban board today in real-time collaboration.
+                    Make your board today, collaborate right away
                 </p>
             </div>
 
             <h2 className="heading-L text-black dark:text-white mb-4 mt-4 px-4">Browse All Boards</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 leading-5">
-                {boards.map((board) => (
-                    <div
-                        key={board.id}
-                        className="p-6! bg-white dark:bg-[#2b2c37] rounded-lg shadow-xs border hover:border-[#635fc7]! cursor-pointer transition-all no-underline"
-                        onClick={() => {
-                            if (board.id) {
-                                handleClick(board.id);
-                            }
-                        }}
-                    >
-                        <h3 className="text-lg font-bold text-black dark:text-white">{board.name}</h3>
-                        <p className="body-M text-[#828fa3] mt-2">{board.columns?.length || 0} Columns </p>
-                        <div className="mt-4 flex items-center justify-between">
-                            <span className="text-[10px] uppercase tracking-widest text-[#828fa3]">
-                                Owner: {getOwnerName(board.user_id)}
-                            </span>
-                        </div>
-                    </div>
-                ))}
-                {boards.length === 0 && (
-                    <p className="text-[#828fa3]">No boards found in the database.</p>
-                )}
-            </div>
+           
+            <section className="bg-background p-8 flex w-full max-w-4xl mx-auto">
+                <BoardCards boards={boards} handleClick={handleClick} getOwnerName={getOwnerName} />
+            </section>
         </div>
     );
 }
